@@ -250,5 +250,5 @@ def update_gist(content):
 
 
 if __name__ == "__main__":
-    sub = build_subscription()
-    update_gist(sub)
+    subscription = build_subscription()
+    update_gist(subscription)
