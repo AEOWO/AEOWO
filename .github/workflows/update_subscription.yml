@@ -2,8 +2,8 @@ name: Update V2Ray Subscription
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # هر 5 دقیقه
-  workflow_dispatch:
+    - cron: '*/5 * * * *'  # هر 5 دقیقه یک بار اجرا می‌شود
+  workflow_dispatch:       # امکان اجرای دستی هم دارد
 
 jobs:
   update-subscription:
@@ -17,11 +17,11 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install dependencies
+      - name: Install requests
         run: pip install requests
 
-      - name: Fetch raw configs and build mahsa-free-config.txt
-        run: python mahsa-free-config.py   # 🔹 این فایل همونیه که mahsa-free-config.txt می‌سازه
+      - name: Build mahsa-free-config.txt
+        run: python mahsa-free-config.py
 
       - name: Run subscription updater
         run: python make_sub.py
