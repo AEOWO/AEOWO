@@ -3,7 +3,7 @@ import json
 import requests
 import os
 
-# فایل ورودی شامل همه لینک‌ها
+# فایل ورودی شامل همه لینک‌ها (با اسکریپت قبلی ساخته می‌شود)
 INPUT_FILE = "mahsa-free-config.txt"
 
 # توکن GitHub از Secrets → اسمش رو GOTHUB_TOKEN گذاشتی
@@ -35,6 +35,45 @@ def build_subscription():
         lines = [l.strip() for l in f if l.strip()]
 
     grouped = {}
+
+    # بررسی از آخر به اول برای نگه داشتن جدیدترین لینک‌ها
+    for link in reversed(lines):
+        if link.startswith("vmess://"):
+            node = parse_vmess(link)
+            if not node or "ps" not in node:
+                continue
+            name = node["ps"]
+            if name not in grouped:
+                grouped[name] = []
+            if len(grouped[name]) < 5:
+                grouped[name].append(link)
+
+    # بازگرداندن لینک‌ها به ترتیب اصلی
+    filtered_links = []
+    for name_links in grouped.values():
+        filtered_links.extend(reversed(name_links))
+
+    subscription = "\n".join(filtered_links)
+    subscription_b64 = base64.b64encode(subscription.encode()).decode()
+    return subscription_b64
+
+
+def update_gist(content):
+    url = f"https://api.github.com/gists/{GIST_ID}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    payload = {"files": {FILENAME: {"content": content}}}
+
+    resp = requests.patch(url, headers=headers, json=payload)
+    if resp.status_code == 200:
+        gist_url = resp.json()["files"][FILENAME]["raw_url"]
+        print(f"✅ Subscription updated! Link: {gist_url}")
+    else:
+        print("❌ Update failed:", resp.text)
+
+
+if __name__ == "__main__":
+    subscription = build_subscription()
+    update_gist(subscription)    grouped = {}
     filtered_links = []
 
     # بررسی از آخر به اول تا جدیدترین‌ها اول باشند
