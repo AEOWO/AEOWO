@@ -34,7 +34,51 @@ def build_subscription():
     with open(INPUT_FILE, "r", encoding="utf-8") as f:
         lines = [l.strip() for l in f if l.strip()]
 
-    grouped = {}  # برای محدود کردن تعداد لینک‌ها بر اساس remark
+    grouped = {}  # محدودیت تعداد لینک‌ها بر اساس remark
+    filtered_links = []
+
+    # اضافه کردن لینک‌ها با رعایت محدودیت 5 لینک برای هر remark
+    for link in lines:
+        if link.startswith("vmess://"):
+            node = parse_vmess(link)
+            if not node or "ps" not in node:
+                continue
+            name = node["ps"]
+            if name not in grouped:
+                grouped[name] = []
+            if len(grouped[name]) < 5:
+                grouped[name].append(link)
+                filtered_links.append(build_vmess(node))
+        else:
+            filtered_links.append(link)
+
+    # حذف لینک‌های تکراری و نگه داشتن جدیدترین‌ها
+    filtered_links = list(dict.fromkeys(filtered_links[::-1]))[::-1]
+
+    subscription = "\n".join(filtered_links)
+    subscription_b64 = base64.b64encode(subscription.encode()).decode()
+    return subscription_b64
+
+
+def update_gist(content):
+    url = f"https://api.github.com/gists/{GIST_ID}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    payload = {
+        "files": {
+            FILENAME: {"content": content}
+        }
+    }
+    resp = requests.patch(url, headers=headers, json=payload)
+    if resp.status_code == 200:
+        gist_url = resp.json()["files"][FILENAME]["raw_url"]
+        print(f"✅ Subscription updated! Link: {gist_url}")
+    else:
+        print("❌ Update failed:", resp.text)
+
+
+if __name__ == "__main__":
+    subscription = build_subscription()
+    update_gist(subscription)    grouped = {}  # برای محدود کردن تعداد لینک‌ها بر اساس remark
     filtered_links = []
 
     for link in lines:
