@@ -19,4 +19,4 @@ jobs:
       - name: Run subscription updater
         run: python make_sub.py
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GOTHUB_TOKEN }}
